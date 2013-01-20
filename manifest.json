@@ -1,0 +1,17 @@
+{
+		"name": "Recognate",
+		"description": "An application which serves up the results of the google speach recognition API on port 6734.",
+		"version": "0.1",
+		"app": {
+				"background": {
+						"scripts": ["background.js"]
+				}
+		},
+		"permissions": [
+				"audioCapture",
+				"experimental"
+		],
+		"icons": { "16": "microphone-16.png", "128": "microphone-128.png" },
+		"manifest_version": 2,
+		"minimum_chrome_version":  "25"
+}
