@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 import AudioParseResult
 import GoogleAudioParse
 
@@ -9,7 +7,10 @@ main :: IO ()
 main = do
 
      res <-  googleAudioFileParse "example.flac"
-     putStrLn . show . getResult . fromJust $ res
+     
+     case res of
+          Nothing -> putStrLn "No Result"
+          _ -> putStrLn . show . getResult . fromJust $ res     
      
      return ()
 

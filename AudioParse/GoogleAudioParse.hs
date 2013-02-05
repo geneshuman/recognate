@@ -3,7 +3,6 @@
 module GoogleAudioParse
 (
 googleAudioFileParse
---GoogleAudioParseResult(..)
 ) where
 
 import System.Process
@@ -31,10 +30,11 @@ instance FromJSON GoogleAudioParseResult where
                    (parseJSON =<< (v .: "hypotheses"))
          parseJSON _ = mzero
 
+-- INCOMPLETE         
 instance AudioParseResult GoogleAudioParseResult where
-      getResult = utterance . head . hypotheses 
+      getResult = Just utterance . head . hypotheses 
       getConfidence = confidence . head . hypotheses
-      getAlternatives a = []
+      getAlternatives a = Just []
             
 data GoogleSpeechHypothesis = GoogleSpeechHypothesis
      {
@@ -51,13 +51,17 @@ instance FromJSON GoogleSpeechHypothesis where
          
 googleAudioFileParse :: String -> IO(Maybe GoogleAudioParseResult)
 googleAudioFileParse file = do
+
+                     -- use curl directly from the command line
                      let cmd = "curl"                                          
                      let args = ["--data-binary","@" ++ file,"--header", "Content-type: audio/x-flac; rate=16000","https://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&pfilter=2&lang=en-US&maxresults=6"]
                      
                      (_, Just hout, _, _) <- createProcess (proc cmd args){ std_out = CreatePipe }
                      hSetBinaryMode hout False
                      apiJSON <- hGetContents hout
-                     let res = decode (C.pack apiJSON) :: Maybe GoogleAudioParseResult
-                     return res
+                     
+                     return(decode (C.pack apiJSON) :: Maybe GoogleAudioParseResult)
                        
      
+
+
