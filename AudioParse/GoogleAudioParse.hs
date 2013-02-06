@@ -14,6 +14,8 @@ import qualified Data.HashMap.Strict  as HM
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Text as T
 
+import Data.Maybe
+
 import AudioParseResult
 
 data GoogleAudioParseResult = GoogleAudioParseResult
@@ -32,9 +34,9 @@ instance FromJSON GoogleAudioParseResult where
 
 -- INCOMPLETE         
 instance AudioParseResult GoogleAudioParseResult where
-      getResult = Just utterance . head . hypotheses 
-      getConfidence = confidence . head . hypotheses
-      getAlternatives a = Just []
+      getResult a = Right(utterance . head . hypotheses $ a) :: Either String T.Text
+      getConfidence = fromJust . confidence . head . hypotheses
+--      getAlternatives a = Just []
             
 data GoogleSpeechHypothesis = GoogleSpeechHypothesis
      {
