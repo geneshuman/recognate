@@ -6,7 +6,8 @@ import GoogleAudioParse
 main :: IO ()
 main = do
 
-     res <- googleAudioFileParse "example.flac"
+     res <- googleAudioParseSOX
+--     res <- googleAudioFileParseCurl "example.flac"
      
      case res of
           Left e -> putStrLn e

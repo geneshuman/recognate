@@ -3,7 +3,8 @@
 module GoogleAudioParse
 (
 googleAudioFileParseCurl,
-googleAudioFileParse
+googleAudioFileParse,
+googleAudioParseSOX
 ) where
 
 import System.Process
@@ -26,8 +27,7 @@ import qualified Data.ByteString as BS
 import Control.Monad.IO.Class (liftIO)
 
 -- GoogleAudioParseResult
-data GoogleAudioParseResult = GoogleAudioParseResult
-     {
+data GoogleAudioParseResult = GoogleAudioParseResult {
         status :: Int,
         id :: T.Text,
         hypotheses :: [GoogleSpeechHypothesis]
@@ -47,7 +47,7 @@ instance AudioParseResult GoogleAudioParseResult where
                     where hyp = hypotheses(a)
          getConfidence a = case hyp of
                     [] -> Left("Google Audio Parse Error - " ++ show (status a)) :: Either String Float
-                    _ -> Right(fromJust . confidence . head  $ hyp) :: Either String Float
+                    _ -> Right(fromJust . confidence . head $ hyp) :: Either String Float
                     where hyp = hypotheses(a)                    
          getAlternatives a = case hyp of
                     [] -> Left("Google Audio Parse Error - " ++ show (status a)) :: Either String [T.Text]
@@ -55,8 +55,7 @@ instance AudioParseResult GoogleAudioParseResult where
                     where hyp = hypotheses(a)                    
 
 -- GoogleSpeechHypothesis                    
-data GoogleSpeechHypothesis = GoogleSpeechHypothesis
-     {
+data GoogleSpeechHypothesis = GoogleSpeechHypothesis {
         utterance :: T.Text,
         confidence :: Maybe Float
       } deriving(Show)
@@ -71,6 +70,7 @@ instance FromJSON GoogleSpeechHypothesis where
 -- Audio Parsing Methods
 
 -- use curl directly from the command line
+-- TODO: check if file exists
 googleAudioFileParseCurl :: String -> IO(Either String GoogleAudioParseResult)
 googleAudioFileParseCurl file = do
                      let cmd = "curl"
@@ -88,6 +88,7 @@ googleAudioFileParseCurl file = do
                        
      
 -- use http-conduit to stream the file to the server
+-- TODO: check if file exists
 googleAudioFileParse :: String -> IO(Either String GoogleAudioParseResult)
 googleAudioFileParse file = withSocketsDo $ do
                      
@@ -116,7 +117,28 @@ doGoogleAPIPost url contents = do
                           Response status _ _ src <- httpLbs reqHead manager
                           liftIO $ return(Right(src) :: Either String L.ByteString)
 
+                          
+-- use http-conduit to stream microphone input(via SOX) to the server
+-- TODO: error checking & removal of tmp files
+googleAudioParseSOX :: IO(Either String GoogleAudioParseResult)
+googleAudioParseSOX = do
+                    
+                    let cmd1 = "sox/rec"
+                    let args1 = ["-r", "16000", "-b", "16", "-c", "1", "sox/tmp.wav"]
+                    (hin, _, _, _) <- runInteractiveProcess cmd1 args1 Nothing Nothing
 
+                    putStrLn "Press any key to stop recording"
+                    nil <- getChar
+                    hPutStr hin "\EOT"
+
+                    let cmd2 = "sox/sox"                     
+                    let args2 = ["sox/tmp.wav", "sox/tmp.flac", "gain", "-n", "-5", "silence", "1", "5", "2%"]
+
+                    out <- readProcess cmd2 args2 ""
+                    putStrLn out
+
+                    res <- googleAudioFileParse "sox/tmp.flac"
+                    return res
 
 
 
