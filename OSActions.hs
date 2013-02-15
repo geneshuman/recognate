@@ -1,7 +1,8 @@
 module OSActions(
 ActionArgs,
 OSAction,
-echo
+echo,
+echo2
 ) where
 
 import System.IO
@@ -14,3 +15,6 @@ type OSAction = ActionArgs -> IO()
 
 echo :: OSAction
 echo args = putStrLn . fromJust $ (M.lookup "phrase" args)
+
+echo2 :: OSAction
+echo2 args = putStrLn . reverse . fromJust $ (M.lookup "phrase" args)
