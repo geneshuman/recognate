@@ -1,19 +1,24 @@
 import AudioParseResult
 import GoogleAudioParse
---import ParseAction
+import ExecuteCmd
+
+import System.Environment  
 
 -- parses an audio stream & attempts to convert the result into a system executable action
 main :: IO ()
 main = do
 
-     res <- googleAudioParseSOX
---     res <- googleAudioFileParseCurl "example.flac"
+     args <- getArgs     
+     
+     res <- if null args
+         then googleAudioParseSOX
+         else googleAudioFileParseCurl . head $ args
      
      case res of
           Left e -> putStrLn e
           Right r -> case getResult(r) of 
                     Left e -> putStrLn e
-                    Right r2 ->(putStrLn . show $ r2)
+                    Right r2 -> executeCmd r2 1 []
      
      return ()
 
