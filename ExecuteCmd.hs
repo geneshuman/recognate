@@ -1,51 +1,32 @@
 module ExecuteCmd(executeCmd) where
 
-import OSActions
-
-import Data.Map as M
+import qualified Data.List as L
 import qualified Data.Text as T
-
-import Text.EditDistance
+import qualified Data.Map as M
 
 import Data.Maybe
 
-data ActionPattern = ActionPattern {
-     pattern :: String,
-     patternAction :: OSAction
-     }
-
-data ActionMatch = ActionMatch {
-     confidence :: Float,
-     args :: ActionArgs,
-     matchAction :: OSAction
-     }     
-     
-actionPatterns ::[ActionPattern]
-actionPatterns = 
-               [
-               ActionPattern "this is a test" echo,
-               ActionPattern "suck my balls" echo2
-               ]               
+import ActionMatch
+import MatchPattern
+import ActionPatterns
 
 executeCmd :: T.Text -> Float -> [T.Text] -> IO ()
 executeCmd cmd confidence alternatives =
            action args
-           where results = Prelude.map (matchPattern . show $ cmd) actionPatterns
-                 ActionMatch _ args action = head . id $ results
+           where results = map (matchPattern . show $ cmd) actionPatterns
+                 ActionMatch confidence args actionName = head . L.sort $ results
+                 action = fromJust(M.lookup actionName actions)
 
-matchPattern :: String -> ActionPattern -> ActionMatch
-matchPattern query (ActionPattern pattern action) =
-             ActionMatch 1.0 args action
-             where args = M.fromList [("phrase", query)]
-   
 {-
  iterate through action patterns
- find matching percentages
+ match patterns
  sort
  take first
 
+ TODO
  multiply confidences
  if < threshold
  repeat task for alternatives
- 
+
+ check errors, etc
 -}
