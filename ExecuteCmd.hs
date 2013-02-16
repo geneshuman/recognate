@@ -26,7 +26,7 @@ executeCmd cmd confidence alternatives =
                   initialMatches = initializeMatches (show cmd) (deMultiplexPatterns $ actionPatterns)
                   newArgs = M.insert "cmd" (show cmd) args                                 
 
--- expand blocks in patterns
+-- expand or blocks in patterns
 deMultiplexPatterns :: [ActionPattern] -> [ActionPattern]
 deMultiplexPatterns patterns = patterns
 
